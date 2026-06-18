@@ -25,7 +25,7 @@ def test_card_text_fields_uses_cache(monkeypatch):
     assert fields["Meaning"] == "friend"
     assert fields["Pinyin"] == "péng yǒu"
     assert fields["SentenceTraditional"] == "我有朋友。"  # unchanged: no traditional variants here
-    assert fields["Audio"] == ""
+    assert fields["AudioFile"] == ""
     assert called == []  # cache hit -> no LLM
 
 

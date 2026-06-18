@@ -6,13 +6,16 @@ def _args(argv):
     return cli.build_parser().parse_args(argv)
 
 
-def test_attach_audio_sets_sound_tags(monkeypatch):
+def test_attach_audio_word_manual_sentence_autoplay(monkeypatch):
     stored = []
     monkeypatch.setattr(cli.chinese, "make_audio", lambda text, voice: b"AUDIO")
     monkeypatch.setattr(cli.anki, "store_media", lambda filename, data: stored.append(filename))
-    fields = {"Audio": "", "SentenceAudio": "", "SentenceSimplified": "我有朋友。"}
+    fields = {"AudioFile": "", "SentenceAudio": "", "SentenceSimplified": "我有朋友。"}
     cli.attach_audio(fields, "朋友", "zh-CN-XiaoxiaoNeural")
-    assert fields["Audio"].startswith("[sound:") and fields["Audio"].endswith(".mp3]")
+    # Word audio is a bare filename (manual <audio> player), NOT a [sound:] tag.
+    assert fields["AudioFile"].endswith(".mp3")
+    assert not fields["AudioFile"].startswith("[sound:")
+    # Sentence audio keeps the [sound:] tag so it auto-plays on the back.
     assert fields["SentenceAudio"].startswith("[sound:")
     assert len(stored) == 2
 

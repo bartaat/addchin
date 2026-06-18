@@ -6,7 +6,7 @@ NOTE_TYPE_FIELDS = [
     "Pinyin",
     "Meaning",
     "PartOfSpeech",
-    "Audio",
+    "AudioFile",
     "SentenceSimplified",
     "SentenceTraditional",
     "SentencePinyin",
@@ -15,8 +15,11 @@ NOTE_TYPE_FIELDS = [
     "Notes",
 ]
 
+# Word audio is a manual <audio controls> player (no `autoplay`), so the
+# pronunciation only plays when clicked — Anki auto-plays `[sound:]` fields, so
+# we reference the stored media file directly instead.
 _FRONT = """<div class="hanzi">{{Simplified}}</div>
-{{Audio}}"""
+{{#AudioFile}}<audio controls src="{{AudioFile}}"></audio>{{/AudioFile}}"""
 
 _BACK = """{{FrontSide}}
 <hr id="answer">
@@ -37,6 +40,7 @@ _CSS = """.card {
   background: #fbfbfb;
 }
 .hanzi { font-size: 64px; margin: 24px 0; }
+audio { margin-top: 12px; height: 32px; }
 .pinyin { font-size: 26px; color: #c0392b; margin-top: 12px; }
 .meaning { font-size: 24px; margin: 8px 0; }
 .pos { font-size: 16px; color: #888; }

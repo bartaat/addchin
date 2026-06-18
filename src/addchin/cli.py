@@ -53,7 +53,7 @@ def card_text_fields(word: str, args) -> dict:
         "Pinyin": chinese.to_pinyin(word),
         "Meaning": data.get("meaning", ""),
         "PartOfSpeech": data.get("pos", ""),
-        "Audio": "",
+        "AudioFile": "",
         "SentenceSimplified": sentence,
         "SentenceTraditional": chinese.to_traditional(sentence) if sentence else "",
         "SentencePinyin": chinese.to_pinyin(sentence) if sentence else "",
@@ -67,12 +67,14 @@ def attach_audio(fields: dict, word: str, voice: str) -> None:
     def _store(text: str) -> str:
         name = "addchin_" + hashlib.md5(text.encode("utf-8")).hexdigest()[:12] + ".mp3"
         anki.store_media(name, chinese.make_audio(text, voice))
-        return f"[sound:{name}]"
+        return name
 
-    fields["Audio"] = _store(word)
+    # Word audio is a bare filename → rendered as a click-to-play <audio> control
+    # (no auto-play). Sentence audio uses [sound:] so it auto-plays on the back.
+    fields["AudioFile"] = _store(word)
     sentence = fields.get("SentenceSimplified", "")
     if sentence:
-        fields["SentenceAudio"] = _store(sentence)
+        fields["SentenceAudio"] = f"[sound:{_store(sentence)}]"
 
 
 def add_card(args, fields: dict) -> str:
