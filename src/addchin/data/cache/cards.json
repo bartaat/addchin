@@ -1,0 +1,26 @@
+{
+  "朋友": {
+    "meaning": "friend",
+    "pos": "noun",
+    "sentence": "我有很多朋友。",
+    "sentence_meaning": "I have many friends."
+  },
+  "图书馆": {
+    "meaning": "library",
+    "pos": "noun",
+    "sentence": "我去图书馆看书。",
+    "sentence_meaning": "I go to the library to read."
+  },
+  "喜欢": {
+    "meaning": "to like",
+    "pos": "verb",
+    "sentence": "我喜欢喝茶。",
+    "sentence_meaning": "I like drinking tea."
+  },
+  "觉得": {
+    "meaning": "to think; to feel",
+    "pos": "verb",
+    "sentence": "我觉得这个很好。",
+    "sentence_meaning": "I think this is very good."
+  }
+}
