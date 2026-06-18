@@ -27,10 +27,10 @@ def _lists_dir() -> Path:
     return Path(str(files("addchin").joinpath("data", "lists")))
 
 
-def available_lists() -> list:
+def available_lists() -> list[str]:
     return sorted(p.stem for p in _lists_dir().glob("*.txt"))
 
 
-def read_list(name: str) -> list:
+def read_list(name: str) -> list[str]:
     text = (_lists_dir() / f"{name}.txt").read_text(encoding="utf-8")
     return [w.strip() for w in text.splitlines() if w.strip()]
