@@ -51,3 +51,23 @@ def test_generate_raises_when_no_backend(monkeypatch):
     monkeypatch.setattr(llm.shutil, "which", lambda name: None)
     with pytest.raises(RuntimeError):
         llm.generate("朋友")
+
+
+def test_generate_api_passes_structured_output(monkeypatch):
+    captured = {}
+
+    class _CapClient:
+        class messages:
+            @staticmethod
+            def create(**kwargs):
+                captured.update(kwargs)
+                return _Resp()
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(llm.anthropic, "Anthropic", lambda: _CapClient())
+    llm.generate("朋友")
+    assert captured["model"] == "claude-opus-4-8"
+    assert captured["output_config"]["format"]["type"] == "json_schema"
+    assert set(captured["output_config"]["format"]["schema"]["required"]) == {
+        "meaning", "pos", "sentence", "sentence_meaning",
+    }

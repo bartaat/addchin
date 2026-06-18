@@ -92,6 +92,9 @@ def build_cache(args) -> int:
     store = json.loads(path.read_text(encoding="utf-8"))
     words = cache.read_list(args.list_name)
     for i, word in enumerate(words, 1):
+        if word in store and not args.regenerate:
+            print(f"[{i}/{len(words)}] {word} (cached, skipping)", flush=True)
+            continue
         print(f"[{i}/{len(words)}] {word}", flush=True)
         store[word] = llm.generate(word, args.llm_model)
     path.write_text(json.dumps(store, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

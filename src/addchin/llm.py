@@ -36,9 +36,7 @@ _SCHEMA = {
 
 
 def _validate(data: dict) -> dict:
-    for key in _KEYS:
-        data.setdefault(key, "")
-    return {key: data[key] for key in _KEYS}
+    return {key: data.get(key, "") for key in _KEYS}
 
 
 def _generate_api(word: str, model: str) -> dict:
@@ -49,7 +47,9 @@ def _generate_api(word: str, model: str) -> dict:
         messages=[{"role": "user", "content": _PROMPT.format(word=word)}],
         output_config={"format": {"type": "json_schema", "schema": _SCHEMA}},
     )
-    text = next(b.text for b in resp.content if b.type == "text")
+    text = next((b.text for b in resp.content if b.type == "text"), None)
+    if text is None:
+        raise RuntimeError(f"Claude returned no text for {word!r} (stop_reason={resp.stop_reason}).")
     return _validate(json.loads(text))
 
 
