@@ -1,6 +1,8 @@
 """Command-line interface for addchin."""
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 
 from . import anki, cache, chinese, config, doctor, llm
@@ -59,3 +61,94 @@ def card_text_fields(word: str, args) -> dict:
         "SentenceAudio": "",
         "Notes": "",
     }
+
+
+def attach_audio(fields: dict, word: str, voice: str) -> None:
+    def _store(text: str) -> str:
+        name = "addchin_" + hashlib.md5(text.encode("utf-8")).hexdigest()[:12] + ".mp3"
+        anki.store_media(name, chinese.make_audio(text, voice))
+        return f"[sound:{name}]"
+
+    fields["Audio"] = _store(word)
+    sentence = fields.get("SentenceSimplified", "")
+    if sentence:
+        fields["SentenceAudio"] = _store(sentence)
+
+
+def add_card(args, fields: dict) -> str:
+    try:
+        anki.add_note(args.deck, args.note_type, fields, args.tags)
+        return "added"
+    except anki.AnkiError as exc:
+        if "duplicate" in str(exc).lower():
+            return "skipped"
+        return f"failed:{exc}"
+
+
+def build_cache(args) -> int:
+    if not args.list_name:
+        build_parser().error("--build-cache requires --list NAME")
+    path = cache.cache_path()
+    store = json.loads(path.read_text(encoding="utf-8"))
+    words = cache.read_list(args.list_name)
+    for i, word in enumerate(words, 1):
+        print(f"[{i}/{len(words)}] {word}", flush=True)
+        store[word] = llm.generate(word, args.llm_model)
+    path.write_text(json.dumps(store, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {len(store)} entries to {path}")
+    return 0
+
+
+def main(argv=None) -> int:
+    args = build_parser().parse_args(argv)
+
+    if args.check:
+        return 0 if doctor.check() else 1
+    if args.lists:
+        for name in cache.available_lists():
+            print(name)
+        return 0
+    if args.build_cache:
+        return build_cache(args)
+
+    words = resolve_words(args)
+    print(f"Loaded {len(words)} word(s).\n")
+
+    if not args.dry_run:
+        anki.ensure_deck(args.deck)
+        anki.ensure_note_type(args.note_type)
+
+    added = skipped = failed = 0
+    for i, word in enumerate(words, 1):
+        print(f"[{i}/{len(words)}] {word} ...", flush=True)
+        try:
+            fields = card_text_fields(word, args)
+        except Exception as exc:  # LLM/network failure for one word
+            print(f"    FAILED: {exc}")
+            failed += 1
+            continue
+
+        if args.dry_run:
+            for key, value in fields.items():
+                print(f"    {key:20} {value}")
+            added += 1
+            continue
+
+        if not args.no_audio:
+            attach_audio(fields, word, args.voice)
+
+        result = add_card(args, fields)
+        if result == "added":
+            print(f"    added: {fields['Pinyin']} — {fields['Meaning']}")
+            added += 1
+        elif result == "skipped":
+            print("    skipped (already in deck)")
+            skipped += 1
+        else:
+            print(f"    {result.replace('failed:', 'FAILED: ')}")
+            failed += 1
+
+    print(f"\nDone. added={added} skipped={skipped} failed={failed}")
+    if not args.dry_run and added:
+        print("Tip: in Anki, run Tools > Check Media if audio doesn't play.")
+    return 0
