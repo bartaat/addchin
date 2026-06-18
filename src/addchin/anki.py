@@ -33,6 +33,19 @@ def ensure_deck(deck: str) -> None:
 def ensure_note_type(note_type: str) -> None:
     if note_type not in invoke("modelNames"):
         invoke("createModel", **templates.model_spec(note_type))
+        return
+    # Already exists — keep it in sync so template/field/styling changes from a
+    # newer addchin version reach decks created by an older one.
+    existing = invoke("modelFieldNames", modelName=note_type)
+    for field in templates.NOTE_TYPE_FIELDS:
+        if field not in existing:
+            invoke("modelFieldAdd", modelName=note_type, fieldName=field, index=len(existing))
+            existing.append(field)
+    invoke(
+        "updateModelTemplates",
+        model={"name": note_type, "templates": {templates.CARD_NAME: {"Front": templates.FRONT, "Back": templates.BACK}}},
+    )
+    invoke("updateModelStyling", model={"name": note_type, "css": templates.CSS})
 
 
 def store_media(filename: str, data: bytes) -> None:

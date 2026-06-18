@@ -15,13 +15,15 @@ NOTE_TYPE_FIELDS = [
     "Notes",
 ]
 
+CARD_NAME = "Recognition"
+
 # Word audio is a manual <audio controls> player (no `autoplay`), so the
 # pronunciation only plays when clicked — Anki auto-plays `[sound:]` fields, so
 # we reference the stored media file directly instead.
-_FRONT = """<div class="hanzi">{{Simplified}}</div>
+FRONT = """<div class="hanzi">{{Simplified}}</div>
 {{#AudioFile}}<audio controls src="{{AudioFile}}"></audio>{{/AudioFile}}"""
 
-_BACK = """{{FrontSide}}
+BACK = """{{FrontSide}}
 <hr id="answer">
 <div class="pinyin">{{Pinyin}}</div>
 <div class="meaning">{{Meaning}} <span class="pos">{{PartOfSpeech}}</span></div>
@@ -32,7 +34,7 @@ _BACK = """{{FrontSide}}
 {{SentenceAudio}}
 <div class="notes">{{Notes}}</div>"""
 
-_CSS = """.card {
+CSS = """.card {
   font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
   font-size: 20px;
   text-align: center;
@@ -57,9 +59,9 @@ def model_spec(model_name: str) -> dict:
     return {
         "modelName": model_name,
         "inOrderFields": NOTE_TYPE_FIELDS,
-        "css": _CSS,
+        "css": CSS,
         "isCloze": False,
         "cardTemplates": [
-            {"Name": "Recognition", "Front": _FRONT, "Back": _BACK}
+            {"Name": CARD_NAME, "Front": FRONT, "Back": BACK}
         ],
     }
